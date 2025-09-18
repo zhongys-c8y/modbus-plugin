@@ -18,17 +18,17 @@ logging.basicConfig(
 
 
 def run(arguments: str | list[str], context: Context) -> None:
-    """Run c8y_update_coil operation handler"""
-    # Expected arguments (JSON):
-    # {
-    #     "id": < operationId >,
-    #     "c8y_SetCoil": {
-    #        "ipAddress": < ipaddress or empty >,
-    #       "address": < Fieldbusaddress >,
-    #       "coil": < coilnumber >,
-    #       "value": < 0 | 1 >}
-    # }
-    # Parse JSON payload
+    """Run c8y_update_coil operation handler
+    Expected arguments (JSON):
+    {
+        "id": < operationId >,
+        "c8y_SetCoil": {
+           "ipAddress": < ipaddress or empty >,
+          "address": < Fieldbusaddress >,
+          "coil": < coilnumber >,
+          "value": < 0 | 1 >}
+    }
+    Parse JSON payload"""
     payload = parse_json_arguments(arguments)
 
     # Load configs and set log level

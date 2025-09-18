@@ -107,3 +107,39 @@ def apply_loglevel(logger, base_config: dict) -> None:
     """Apply log level from base configuration to given logger."""
     loglevel = base_config["modbus"].get("loglevel") or "INFO"
     logger.setLevel(getattr(logging, loglevel.upper(), logging.INFO))
+
+
+def parse_register_params(payload: dict) -> dict:
+    """Parse and validate register operation parameters into a single dict.
+
+    Returns a dict with keys: ip_address, slave_id, register, start_bit, num_bits, write_value.
+    """
+    ip_address = (payload.get("ipAddress") or "").strip()
+    try:
+        return {
+            "ip_address": ip_address,
+            "slave_id": int(payload["address"]),
+            "register": int(payload["register"]),
+            "start_bit": int(payload.get("startBit", 0)),
+            "num_bits": int(payload.get("noBits", 16)),
+            "write_value": int(payload["value"]),
+        }
+    except KeyError as err:
+        raise ValueError(f"Missing required field: {err}") from err
+    except (TypeError, ValueError) as err:
+        raise ValueError(f"Invalid numeric field: {err}") from err
+
+
+def compute_masked_value(
+    current_value: int, start_bit: int, num_bits: int, write_value: int
+) -> int:
+    """Validate bit-field and compute new register value with masked bits applied."""
+    if start_bit < 0 or num_bits <= 0 or start_bit + num_bits > 16:
+        raise ValueError(
+            "startBit and noBits must define a range within a 16-bit register"
+        )
+    max_value = (1 << num_bits) - 1
+    if write_value < 0 or write_value > max_value:
+        raise ValueError(f"value must be within 0..{max_value} for noBits={num_bits}")
+    mask = ((1 << num_bits) - 1) << start_bit
+    return (current_value & ~mask) | ((write_value << start_bit) & mask)
