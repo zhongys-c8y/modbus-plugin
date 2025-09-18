@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Cumulocity IoT Modbus Write Coil Status operation handler"""
+"""Modbus Write Coil Status operation handler"""
 import logging
 
 from pymodbus.exceptions import ConnectionException
@@ -18,7 +18,7 @@ logging.basicConfig(
 
 
 def run(arguments: str | list[str], context: Context) -> None:
-    """Run c8y_update_coil operation handler
+    """Run update_coil operation handler
     Expected arguments (JSON):
     {
         "id": < operationId >,
@@ -34,7 +34,7 @@ def run(arguments: str | list[str], context: Context) -> None:
     # Load configs and set log level
     modbus_config = context.base_config
     apply_loglevel(logger, modbus_config)
-    logger.info("New c8y_update_coil operation")
+    logger.info("New update_coil operation")
 
     try:
         ops = payload["c8y_SetCoil"]
