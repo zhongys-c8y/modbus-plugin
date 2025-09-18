@@ -1,4 +1,4 @@
 [exec]
   topic = "c8y/devicecontrol/notifications"
-  on_message = "6"
+  on_fragment = "c8y_SetCoil"
   command = "python3 -m tedge_modbus.operations set-coil ${.payload.c8y_SetCoil}"
