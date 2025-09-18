@@ -19,6 +19,7 @@ logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 
+
 def run(arguments: str | list[str], context: Context) -> None:
     """Run c8y_update_register operation handler
     Expected arguments (JSON):
