@@ -25,9 +25,9 @@ def main():
         run = c8y_registers.run
     elif command == "c8y_SerialConfiguration":
         run = c8y_serial_configuration.run
-    elif command == "c8y_SetRegister":
+    elif command == "set-register":
         run = c8y_update_register.run
-    elif command == "c8y_SetCoil":
+    elif command == "set-coil":
         run = c8y_update_coil.run
 
     arguments = sys.argv[2:]
