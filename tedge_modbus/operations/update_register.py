@@ -1,6 +1,6 @@
 # pylint: disable=duplicate-code
 #!/usr/bin/env python3
-"""Cumulocity IoT Modbus Write register status operation handler"""
+"""Modbus Write register status operation handler"""
 import logging
 
 from pymodbus.exceptions import ConnectionException
@@ -21,7 +21,7 @@ logging.basicConfig(
 
 
 def run(arguments: str | list[str], context: Context) -> None:
-    """Run c8y_update_register operation handler
+    """Run update_register operation handler
     Expected arguments (JSON):
         {
         "ipAddress": <ip address or empty>,
@@ -38,7 +38,7 @@ def run(arguments: str | list[str], context: Context) -> None:
     # Load configs and set log level
     modbus_config = context.base_config
     apply_loglevel(logger, modbus_config)
-    logger.info("New c8y_update_register operation")
+    logger.info("New update_register operation")
 
     # Parse required fields from JSON
     params = parse_register_params(payload)
