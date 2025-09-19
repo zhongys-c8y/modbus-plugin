@@ -21,12 +21,10 @@ def run(arguments: str | list[str], context: Context) -> None:
     """Run update_coil operation handler
     Expected arguments (JSON):
     {
-        "id": < operationId >,
-        "c8y_SetCoil": {
-           "ipAddress": < ipaddress or empty >,
-          "address": < Fieldbusaddress >,
-          "coil": < coilnumber >,
-          "value": < 0 | 1 >}
+        "ipAddress": < ipaddress or empty >,
+        "address": < Fieldbusaddress >,
+        "coil": < coilnumber >,
+        "value": < 0 | 1 >
     }
     Parse JSON payload"""
     payload = parse_json_arguments(arguments)
@@ -37,11 +35,10 @@ def run(arguments: str | list[str], context: Context) -> None:
     logger.info("New update_coil operation")
 
     try:
-        ops = payload["c8y_SetCoil"]
-        ip_address = (ops.get("ipAddress") or "").strip()
-        slave_id = int(ops["address"])  # Fieldbus address
-        coil_number = int(ops["coil"])  # Coil address
-        value_int = int(ops["value"])  # 0 or 1
+        ip_address = (payload.get("ipAddress") or "").strip()
+        slave_id = int(payload["address"])  # Fieldbus address
+        coil_number = int(payload["coil"])  # Coil address
+        value_int = int(payload["value"])  # 0 or 1
     except KeyError as err:
         raise ValueError(f"Missing required field: {err}") from err
     except (TypeError, ValueError) as err:
