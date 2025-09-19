@@ -1,5 +1,5 @@
+#!/usr/bin/env python3
 """Publish Modbus operation payload to tedge MQTT topic."""
-
 import json
 import logging
 import paho.mqtt.client as mqtt
@@ -13,7 +13,8 @@ logging.basicConfig(
 
 
 def run(arguments, context: Context):  # pylint: disable=unused-argument
-    """Expected arguments (JSON):
+    """
+    Expected arguments (JSON):
     {"delivery":{"log":[],"time":"2025-09-18T12:33:55.628Z","status":"PENDING"},
     "agentId":"348474836","creationTime":"2025-09-18T12:33:55.564Z","deviceId":"528472067",
     "id":"8476306","status":"PENDING","c8y_SetRegister":{"address":1,"startBit":0,"noBits":16,
@@ -45,9 +46,8 @@ def run(arguments, context: Context):  # pylint: disable=unused-argument
 
     payload = json.dumps({operation_key: arguments[operation_key]})
 
-    ctx = Context()
-    broker = ctx.broker
-    port = ctx.port
+    broker = context.broker
+    port = context.port
 
     client = mqtt.Client()
     client.connect(broker, port, 60)

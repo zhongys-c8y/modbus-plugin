@@ -31,7 +31,9 @@ def main():
         run = update_register.run
     elif command == "set-coil":
         run = update_coil.run
-    elif command == ("map_update_coil" or "map_update_register"):
+    elif command == "map_update_coil":
+        run = topic_switcher.run
+    elif command == "map_update_register":
         run = topic_switcher.run
 
     arguments = sys.argv[2:]
