@@ -1,4 +1,4 @@
 [exec]
-  topic = "c8y/devicecontrol/notifications"
+  topic = "te/device/+///cmd/c8y_SetRegister"
   on_fragment = "c8y_SetRegister"
   command = "python3 -m tedge_modbus.operations set-register ${.payload.c8y_SetRegister}"
