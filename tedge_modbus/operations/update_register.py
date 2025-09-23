@@ -1,5 +1,4 @@
 # pylint: disable=duplicate-code
-#!/usr/bin/env python3
 """Modbus Write register status operation handler"""
 import logging
 
@@ -24,6 +23,7 @@ def run(arguments: str | list[str], context: Context) -> None:
     """Run update_register operation handler
     Expected arguments (JSON):
         {
+        "input": false,
         "ipAddress": <ip address or empty>,
         "address": <Fieldbus address>,
         "register": <register number>,

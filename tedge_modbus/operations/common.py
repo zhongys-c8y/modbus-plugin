@@ -32,10 +32,11 @@ def resolve_target_device(
     Returns (target_device, protocol).
     """
     if ip_address:
+        ip = "localhost" if ip_address == "simulator" else ip_address
         protocol = "TCP"
         target_device = {
             "protocol": "TCP",
-            "ip": ip_address,
+            "ip": ip,
             "port": 502,
             "address": slave_id,
         }
@@ -47,6 +48,8 @@ def resolve_target_device(
         ) or next((d for d in devices if d.get("protocol") == "TCP"), None)
         if target_device is None:
             raise ValueError(f"No suitable device found in {devices_path}")
+        if target_device.get("ip") == "simulator":
+            target_device["ip"] = "localhost"
         protocol = target_device.get("protocol")
     return target_device, protocol  # type: ignore[return-value]
 

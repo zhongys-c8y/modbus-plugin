@@ -35,7 +35,6 @@ def run(arguments: str | list[str], context: Context) -> None:
     logger.info("New update_coil operation")
 
     try:
-        ip_address = (payload.get("ipAddress") or "").strip()
         slave_id = int(payload["address"])  # Fieldbus address
         coil_number = int(payload["coil"])  # Coil address
         value_int = int(payload["value"])  # 0 or 1
@@ -49,7 +48,7 @@ def run(arguments: str | list[str], context: Context) -> None:
 
     # Prepare client (resolve target, backfill defaults, build client)
     client = prepare_client(
-        ip_address,
+        "",
         slave_id,
         context.config_dir / "devices.toml",
         modbus_config,
