@@ -8,8 +8,6 @@ from . import c8y_modbus_configuration
 from . import c8y_modbus_device
 from . import c8y_registers
 from . import c8y_serial_configuration
-from . import update_register
-from . import update_coil
 from .context import Context
 
 
@@ -26,10 +24,10 @@ def main():
         run = c8y_registers.run
     elif command == "c8y_SerialConfiguration":
         run = c8y_serial_configuration.run
-    elif command == "set-register":
-        run = update_register.run
-    elif command == "set-coil":
-        run = update_coil.run
+    # elif command == "set-register":
+    #     update_register.run(sys.argv[2:])
+    # elif command == "set-coil":
+    #     update_register.run(sys.argv[2:])
 
     arguments = sys.argv[2:]
     context = Context()

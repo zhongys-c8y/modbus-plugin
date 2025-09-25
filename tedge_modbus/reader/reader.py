@@ -18,6 +18,8 @@ from watchdog.observers import Observer
 
 from .banner import BANNER
 from .mapper import MappedMessage, ModbusMapper
+from ..operations import update_register, update_coil
+
 
 DEFAULT_FILE_DIR = "/etc/tedge/plugins/modbus"
 BASE_CONFIG_NAME = "modbus.toml"
@@ -410,6 +412,124 @@ class ModbusPoll:
             topic=msg.topic, payload=msg.data, retain=retain, qos=qos
         )
 
+    def on_connect(self, client, userdata, flags, rc):  # pylint: disable=unused-argument
+        """Callback for when the client receives a CONNACK response from the server"""
+        if rc == 0:
+            self.logger.debug("Connected to MQTT broker successfully")
+            # Subscribe to topics if configured
+            self._subscribe_to_topics(client)
+        else:
+            self.logger.error("Failed to connect to MQTT broker, return code %d", rc)
+
+    def on_message(self, client, userdata, msg):  # pylint: disable=unused-argument
+        """Callback for when a PUBLISH message is received from the server"""
+        try:
+            topic = msg.topic
+            payload = msg.payload.decode("utf-8")
+            self.logger.debug("Received message on topic %s: %s", topic, payload)
+            self._handle_subscribed_message(topic, payload)
+        except Exception as e:
+            self.logger.error("Error processing subscribed message: %s", e)
+
+    def on_disconnect(self, client, userdata, rc):  # pylint: disable=unused-argument
+        """Callback for when the client disconnects from the broker"""
+        if rc != 0:
+            self.logger.warning(
+                "Unexpected disconnection from MQTT broker, return code %d", rc
+            )
+        else:
+            self.logger.debug("Disconnected from MQTT broker")
+
+    def _subscribe_to_topics(self, client):
+        """Subscribe to configured MQTT topics"""
+        subscribe_topics = self.base_config.get("thinedge", {}).get(
+            "subscribe_topics", []
+        )
+        if subscribe_topics:
+            for topic in subscribe_topics:
+                try:
+                    result = client.subscribe(topic)
+                    if result[0] == mqtt_client.MQTT_ERR_SUCCESS:
+                        self.logger.info("Successfully subscribed to topic: %s", topic)
+                    else:
+                        self.logger.error(
+                            "Failed to subscribe to topic %s, error code: %d",
+                            topic,
+                            result[0],
+                        )
+                except Exception as e:
+                    self.logger.error("Error subscribing to topic %s: %s", topic, e)
+
+    def _publish_status(self, topic, status):
+        """Publish status message to the same topic"""
+        status_payload = json.dumps({"status": status})
+        self.logger.debug("Publishing status %s to topic %s", status, topic)
+        self.tedge_client.publish(topic, status_payload, retain=False, qos=1)
+
+    def _handle_subscribed_message(self, topic, payload):
+        """Handle messages received from subscribed topics"""
+        self.logger.info("Handling message from topic %s: %s", topic, payload)
+
+        # Publish executing status immediately
+        self._publish_status(topic, "executing")
+
+        try:
+            payload_data = json.loads(payload)
+        except json.JSONDecodeError as e:
+            self.logger.error("Failed to parse JSON payload: %s", e)
+            self._publish_status(topic, "failed")
+            return
+
+        # Handle c8y_SetRegister commands
+        if "///cmd/c8y_SetRegister/" in topic:
+            self.logger.info("Processing c8y_SetRegister command")
+            try:
+                # Extract c8y_SetRegister data from payload
+                if "c8y_SetRegister" in payload_data:
+                    register_data = payload_data["c8y_SetRegister"]
+                    self.logger.debug("Register data: %s", register_data)
+
+                    # Convert to JSON string for update_register.run
+                    register_json = json.dumps(register_data)
+
+                    # Call the update_register operation
+                    update_register.run(register_json)
+                    self.logger.info("Successfully processed c8y_SetRegister command")
+                    self._publish_status(topic, "successful")
+                else:
+                    self.logger.warning("No c8y_SetRegister data found in payload")
+                    self._publish_status(topic, "failed")
+            except Exception as e:
+                self.logger.error("Error processing c8y_SetRegister command: %s", e)
+                self._publish_status(topic, "failed")
+
+        # Handle c8y_SetCoil commands
+        elif "///cmd/c8y_SetCoil/" in topic:
+            self.logger.info("Processing c8y_SetCoil command")
+            try:
+                # Extract c8y_SetCoil data from payload
+                if "c8y_SetCoil" in payload_data:
+                    coil_data = payload_data["c8y_SetCoil"]
+                    self.logger.debug("Coil data: %s", coil_data)
+
+                    # Convert to JSON string for update_coil.run
+                    coil_json = json.dumps(coil_data)
+
+                    # Call the update_coil operation
+                    update_coil.run(coil_json)
+                    self.logger.info("Successfully processed c8y_SetCoil command")
+                    self._publish_status(topic, "successful")
+                else:
+                    self.logger.warning("No c8y_SetCoil data found in payload")
+                    self._publish_status(topic, "failed")
+            except Exception as e:
+                self.logger.error("Error processing c8y_SetCoil command: %s", e)
+                self._publish_status(topic, "failed")
+
+        # Add more topic-specific handlers as needed
+        else:
+            self.logger.debug("No specific handler for topic: %s", topic)
+
     def connect_to_tedge(self):
         """Connect to the thin-edge.io MQTT broker and return a connected MQTT client"""
         while True:
@@ -418,8 +538,18 @@ class ModbusPoll:
                 port = self.base_config["thinedge"]["mqttport"]
                 client_id = "modbus-client"
                 client = mqtt_client.Client(client_id)
+
+                # Set up callbacks
+                client.on_connect = self.on_connect
+                client.on_message = self.on_message
+                client.on_disconnect = self.on_disconnect
+
                 client.connect(broker, port)
                 self.logger.debug("Connected to MQTT broker at %s:%d", broker, port)
+
+                # Start the network loop to handle callbacks
+                client.loop_start()
+
                 return client
             except Exception as e:
                 self.logger.error("Failed to connect to thin-edge.io: %s", e)

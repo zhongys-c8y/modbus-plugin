@@ -19,7 +19,7 @@ logging.basicConfig(
 )
 
 
-def run(arguments: str | list[str], context: Context) -> None:
+def run(arguments: str | list[str]) -> None:
     """Run update_register operation handler
     Expected arguments (JSON):
         {
@@ -34,6 +34,9 @@ def run(arguments: str | list[str], context: Context) -> None:
     Parse JSON arguments. Depending on the caller, we may receive the JSON as a single
     string or a list of comma-split segments. Handle both cases robustly."""
     payload = parse_json_arguments(arguments)
+
+    # Create context with default config directory
+    context = Context()
 
     # Load configs and set log level
     modbus_config = context.base_config
