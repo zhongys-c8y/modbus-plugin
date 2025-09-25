@@ -21,7 +21,7 @@ def run(arguments: str | list[str], context: Context) -> None:
     """Run update_coil operation handler
     Expected arguments (JSON):
     {
-        "ipAddress": < ipaddress or empty >,
+        "input": false,
         "address": < Fieldbusaddress >,
         "coil": < coilnumber >,
         "value": < 0 | 1 >

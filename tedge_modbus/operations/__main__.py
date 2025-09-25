@@ -10,7 +10,6 @@ from . import c8y_registers
 from . import c8y_serial_configuration
 from . import update_register
 from . import update_coil
-from . import topic_switcher
 from .context import Context
 
 
@@ -31,10 +30,6 @@ def main():
         run = update_register.run
     elif command == "set-coil":
         run = update_coil.run
-    elif command == "map_update_coil":
-        run = topic_switcher.run
-    elif command == "map_update_register":
-        run = topic_switcher.run
 
     arguments = sys.argv[2:]
     context = Context()

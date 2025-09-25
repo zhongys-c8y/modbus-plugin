@@ -3,6 +3,5 @@
   on_fragment = "c8y_SetCoil"
 
 [exec.workflow]
-operation = "python3 -m tedge_modbus.operations"
-input.x = "map_update_coil"
-input.y = "${.payload}"
+operation = "c8y_SetCoil"
+input.c8y_SetCoil = "${.payload}"
