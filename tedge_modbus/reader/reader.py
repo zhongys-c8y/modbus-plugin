@@ -412,7 +412,9 @@ class ModbusPoll:
             topic=msg.topic, payload=msg.data, retain=retain, qos=qos
         )
 
-    def on_connect(self, client, userdata, flags, rc):  # pylint: disable=unused-argument
+    def on_connect(
+        self, client, userdata, flags, rc
+    ):  # pylint: disable=unused-argument
         """Callback for when the client receives a CONNACK response from the server"""
         if rc == 0:
             self.logger.debug("Connected to MQTT broker successfully")
