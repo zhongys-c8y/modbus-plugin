@@ -488,7 +488,7 @@ class ModbusPoll:
             try:
                 # Extract c8y_SetRegister data from payload
                 if "c8y_SetRegister" in payload_data:
-                    register_data = payload_data["c8y_SetRegister"]
+                    register_data = payload_data["c8y_SetRegister"]["c8y_SetRegister"]
                     self.logger.debug("Register data: %s", register_data)
 
                     # Convert to JSON string for update_register.run
@@ -511,7 +511,7 @@ class ModbusPoll:
             try:
                 # Extract c8y_SetCoil data from payload
                 if "c8y_SetCoil" in payload_data:
-                    coil_data = payload_data["c8y_SetCoil"]
+                    coil_data = payload_data["c8y_SetCoil"]["c8y_SetCoil"]
                     self.logger.debug("Coil data: %s", coil_data)
 
                     # Convert to JSON string for update_coil.run
