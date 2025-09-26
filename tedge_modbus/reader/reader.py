@@ -452,7 +452,7 @@ class ModbusPoll:
                 try:
                     result = client.subscribe(topic)
                     if result[0] == mqtt_client.MQTT_ERR_SUCCESS:
-                        self.logger.info("Successfully subscribed to topic: %s", topic)
+                        self.logger.debug("Successfully subscribed to topic: %s", topic)
                     else:
                         self.logger.error(
                             "Failed to subscribe to topic %s, error code: %d",
@@ -462,32 +462,32 @@ class ModbusPoll:
                 except Exception as e:
                     self.logger.error("Error subscribing to topic %s: %s", topic, e)
 
-    def _publish_status(self, topic, status):
-        """Publish status message to the same topic"""
-        status_payload = json.dumps({"status": status})
-        self.logger.debug("Publishing status %s to topic %s", status, topic)
-        self.tedge_client.publish(topic, status_payload, retain=False, qos=1)
-
     def _handle_subscribed_message(self, topic, payload):
         """Handle messages received from subscribed topics"""
-        self.logger.info("Handling message from topic %s: %s", topic, payload)
-
-        # Publish executing status immediately
-        self._publish_status(topic, "executing")
+        self.logger.debug("Handling message from topic %s: %s", topic, payload)
 
         try:
             payload_data = json.loads(payload)
         except json.JSONDecodeError as e:
             self.logger.error("Failed to parse JSON payload: %s", e)
-            self._publish_status(topic, "failed")
             return
+
+        if payload_data["status"] == "init":
+            # Publish executing status
+            payload_data = {"status": "executing"}
+            self.send_tedge_message(
+                MappedMessage(json.dumps(payload_data), topic), retain=True, qos=1
+            )
 
         # Handle c8y_SetRegister commands
         if "///cmd/c8y_SetRegister/" in topic:
             self.logger.info("Processing c8y_SetRegister command")
             try:
                 # Extract c8y_SetRegister data from payload
-                if "c8y_SetRegister" in payload_data:
+                if (
+                    "c8y_SetRegister" in payload_data
+                    and payload_data["status"] == "init"
+                ):
                     register_data = payload_data["c8y_SetRegister"]["c8y_SetRegister"]
                     self.logger.debug("Register data: %s", register_data)
 
@@ -496,17 +496,27 @@ class ModbusPoll:
 
                     # Call the update_register operation
                     update_register.run(register_json)
-                    self.logger.info("Successfully processed c8y_SetRegister command")
-                    self._publish_status(topic, "successful")
+                    self.logger.debug("Successfully processed c8y_SetRegister command")
+                    payload_data = {"status": "successful"}
+                    self.send_tedge_message(
+                        MappedMessage(json.dumps(payload_data), topic),
+                        retain=True,
+                        qos=1,
+                    )
                 else:
-                    self.logger.warning("No c8y_SetRegister data found in payload")
-                    self._publish_status(topic, "failed")
+                    self.logger.debug("No c8y_SetRegister data found in payload")
             except Exception as e:
                 self.logger.error("Error processing c8y_SetRegister command: %s", e)
-                self._publish_status(topic, "failed")
+                payload_data = {
+                    "status": "failed",
+                    "reason": f"Error processing c8y_SetRegister command: {e}",
+                }
+                self.send_tedge_message(
+                    MappedMessage(json.dumps(payload_data), topic), retain=True, qos=1
+                )
 
         # Handle c8y_SetCoil commands
-        elif "///cmd/c8y_SetCoil/" in topic:
+        elif "///cmd/c8y_SetCoil/" in topic and payload_data["status"] == "init":
             self.logger.info("Processing c8y_SetCoil command")
             try:
                 # Extract c8y_SetCoil data from payload
@@ -519,14 +529,24 @@ class ModbusPoll:
 
                     # Call the update_coil operation
                     update_coil.run(coil_json)
-                    self.logger.info("Successfully processed c8y_SetCoil command")
-                    self._publish_status(topic, "successful")
+                    self.logger.debug("Successfully processed c8y_SetCoil command")
+                    payload_data = {"status": "successful"}
+                    self.send_tedge_message(
+                        MappedMessage(json.dumps(payload_data), topic),
+                        retain=True,
+                        qos=1,
+                    )
                 else:
-                    self.logger.warning("No c8y_SetCoil data found in payload")
-                    self._publish_status(topic, "failed")
+                    self.logger.debug("No c8y_SetCoil data found in payload")
             except Exception as e:
                 self.logger.error("Error processing c8y_SetCoil command: %s", e)
-                self._publish_status(topic, "failed")
+                payload_data = {
+                    "status": "failed",
+                    "reason": f"Error processing c8y_SetCoil command: {e}",
+                }
+                self.send_tedge_message(
+                    MappedMessage(json.dumps(payload_data), topic), retain=True, qos=1
+                )
 
         # Add more topic-specific handlers as needed
         else:
@@ -625,6 +645,13 @@ class ModbusPoll:
             self.send_tedge_message(
                 MappedMessage(json.dumps(payload), topic), retain=True, qos=1
             )
+            cmd_payload = "{}"
+            for cmd in ["c8y_SetRegister", "c8y_SetCoil"]:
+                cmd_topic_register = topic + f"/cmd/{cmd}"
+
+                self.send_tedge_message(
+                    MappedMessage(cmd_payload, cmd_topic_register), retain=True, qos=1
+                )
 
 
 def main():
