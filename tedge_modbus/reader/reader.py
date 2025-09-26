@@ -474,7 +474,7 @@ class ModbusPoll:
 
         if payload_data["status"] == "init":
             # Publish executing status
-            payload_data["status"] ="executing"
+            payload_data["status"] = "executing"
             self.send_tedge_message(
                 MappedMessage(json.dumps(payload_data), topic), retain=True, qos=1
             )
@@ -498,25 +498,29 @@ class ModbusPoll:
                     # Call the update_register operation
                     update_register.run(register_json)
                     self.logger.debug("Successfully processed c8y_SetRegister command")
-                    payload_data["status"] ="successful"
+                    payload_data["status"] = "successful"
                     self.send_tedge_message(
                         MappedMessage(json.dumps(payload_data), topic),
                         retain=True,
-                        qos=1
+                        qos=1,
                     )
                 else:
                     self.logger.debug("No c8y_SetRegister data found in payload")
             except Exception as e:
                 self.logger.error("Error processing c8y_SetRegister command: %s", e)
-                payload_data["status"]= "failed"
-                payload_data["reason"]= f"Error processing c8y_SetRegister command: {e}"
+                payload_data["status"] = "failed"
+                payload_data["reason"] = (
+                    f"Error processing c8y_SetRegister command: {e}"
+                )
 
                 self.send_tedge_message(
                     MappedMessage(json.dumps(payload_data), topic), retain=True, qos=1
                 )
 
         # Handle c8y_SetCoil commands
-        elif "///cmd/modbus_SetCoil/" in topic and payload_data["status"] == "executing":
+        elif (
+            "///cmd/modbus_SetCoil/" in topic and payload_data["status"] == "executing"
+        ):
             self.logger.info("Processing c8y_SetCoil command")
             try:
                 # Extract c8y_SetCoil data from payload
@@ -530,18 +534,18 @@ class ModbusPoll:
                     # Call the update_coil operation
                     update_coil.run(coil_json)
                     self.logger.debug("Successfully processed c8y_SetCoil command")
-                    payload_data["status"]= "successful"
+                    payload_data["status"] = "successful"
                     self.send_tedge_message(
                         MappedMessage(json.dumps(payload_data), topic),
                         retain=True,
-                        qos=1
+                        qos=1,
                     )
                 else:
                     self.logger.debug("No c8y_SetCoil data found in payload")
             except Exception as e:
                 self.logger.error("Error processing c8y_SetCoil command: %s", e)
                 payload_data["status"] = "failed"
-                payload_data["reason"]= f"Error processing c8y_SetCoil command: {e}"
+                payload_data["reason"] = f"Error processing c8y_SetCoil command: {e}"
                 self.send_tedge_message(
                     MappedMessage(json.dumps(payload_data), topic), retain=True, qos=1
                 )
