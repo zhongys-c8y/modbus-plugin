@@ -3,5 +3,5 @@
   on_fragment = "c8y_SetRegister"
 
 [exec.workflow]
-operation = "c8y_SetRegister"
+operation = "modbus_SetRegister"
 input.c8y_SetRegister = "${.payload}"

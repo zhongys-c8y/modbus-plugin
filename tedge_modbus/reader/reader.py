@@ -480,7 +480,7 @@ class ModbusPoll:
             )
 
         # Handle c8y_SetRegister commands
-        if "///cmd/c8y_SetRegister/" in topic:
+        if "///cmd/modbus_SetRegister/" in topic:
             self.logger.info("Processing c8y_SetRegister command")
             try:
                 # Extract c8y_SetRegister data from payload
@@ -516,7 +516,7 @@ class ModbusPoll:
                 )
 
         # Handle c8y_SetCoil commands
-        elif "///cmd/c8y_SetCoil/" in topic and payload_data["status"] == "init":
+        elif "///cmd/modbus_SetCoil/" in topic and payload_data["status"] == "init":
             self.logger.info("Processing c8y_SetCoil command")
             try:
                 # Extract c8y_SetCoil data from payload

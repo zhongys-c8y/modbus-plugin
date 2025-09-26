@@ -24,10 +24,6 @@ def main():
         run = c8y_registers.run
     elif command == "c8y_SerialConfiguration":
         run = c8y_serial_configuration.run
-    # elif command == "set-register":
-    #     update_register.run(sys.argv[2:])
-    # elif command == "set-coil":
-    #     update_register.run(sys.argv[2:])
 
     arguments = sys.argv[2:]
     context = Context()

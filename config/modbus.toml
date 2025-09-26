@@ -15,6 +15,6 @@ mqtthost="127.0.0.1"
 mqttport=1883
 # Subscribe to MQTT topics for receiving messages
  subscribe_topics = [
-     "te/device/+///cmd/c8y_SetRegister/+",
-     "te/device/+///cmd/c8y_SetCoil/+",
+     "te/device/+///cmd/modbus_SetRegister/+",
+     "te/device/+///cmd/modbus_SetCoil/+",
  ]
