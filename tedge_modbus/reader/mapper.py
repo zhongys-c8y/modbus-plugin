@@ -20,7 +20,6 @@ class MappedMessage:
 
     data: str = ""
     topic: str = ""
-    time: str = datetime.now(timezone.utc).isoformat()
 
     def serialize(self):
         """Serialize message adding time if not present"""
@@ -28,7 +27,7 @@ class MappedMessage:
             return self.data
         out = json.loads(self.data)
         if "time" not in out:
-            out["time"] = self.time
+            out["time"] = datetime.now(timezone.utc).isoformat()
         return json.dumps(out)
 
     def extend_data(self, other_message):
@@ -52,7 +51,7 @@ class MappedMessage:
         merged = merge(d1, d2)
 
         if "time" not in merged:
-            merged["time"] = self.time
+            merged["time"] = datetime.now(timezone.utc).isoformat()
 
         # Convert the merged dictionary back to a JSON string and update self.data
         self.data = json.dumps(merged)
